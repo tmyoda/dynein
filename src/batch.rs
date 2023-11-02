@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::parser::DyneinParser;
 use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
 use log::{debug, error};
@@ -87,7 +88,7 @@ Public functions
 ///             ... it should be same as "item" parameter used in PutItem.
 ///         - delete_request (Option<DeleteRequest>), where DeleteRequest { key: HashMap<String, AttributeValue> }
 ///             ... the only thing DeleteRequest should do is specify delete target via key (i.e. pk(+sk)).
-pub fn build_batch_request_items(
+pub fn build_batch_request_items_from_json(
     raw_json_content: String,
 ) -> Result<HashMap<String, Vec<WriteRequest>>, serde_json::Error> {
     let mut results = HashMap::<String, Vec<WriteRequest>>::new();
@@ -240,11 +241,89 @@ pub fn batch_write_untill_processed(
 /// This function is intended to be called from main.rs, as a destination of bwrite command.
 pub async fn batch_write_item(
     cx: app::Context,
-    input_file: String,
+    puts: Option<Vec<String>>,
+    dels: Option<Vec<String>>,
+    input_file: Option<String>,
 ) -> Result<(), DyneinBatchError> {
-    let content = fs::read_to_string(input_file)?;
-    debug!("string content: {}", content);
-    let items = build_batch_request_items(content)?;
+    // validate the nput arguments
+    if puts.is_none() && dels.is_none() && input_file.is_none() {
+        error!("must provide at least one argument for 'bwrite' command");
+        std::process::exit(1);
+    }
+
+    let mut write_requests = Vec::<WriteRequest>::new();
+    let parser = DyneinParser::new();
+    let ts: app::TableSchema = app::table_schema(&cx).await;
+
+    match puts {
+        None => (),
+        Some(items) => {
+            for item in items.iter() {
+                let reuslt = parser.parse_dynein_format(None, item);
+                match reuslt {
+                    Ok(attrs) => {
+                        validate_item_has_keys(&attrs, &ts);
+
+                        write_requests.push(WriteRequest {
+                            put_request: Some(PutRequest { item: attrs }),
+                            delete_request: None,
+                        });
+                    }
+                    Err(e) => {
+                        error!("ERROR: failed to load item. {:?}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+        }
+    }
+
+    match dels {
+        None => (),
+        Some(keys) => {
+            for key in keys.iter() {
+                let reuslt = parser.parse_dynein_format(None, key);
+                match reuslt {
+                    Ok(attrs) => {
+                        validate_item_has_keys(&attrs, &ts);
+
+                        write_requests.push(WriteRequest {
+                            put_request: None,
+                            delete_request: Some(DeleteRequest { key: attrs }),
+                        });
+                    }
+                    Err(e) => {
+                        error!("ERROR: failed to load item. {:?}", e);
+                        std::process::exit(1);
+                    }
+                }
+            }
+        }
+    }
+
+    let mut items = HashMap::<String, Vec<WriteRequest>>::new();
+    if !write_requests.is_empty() {
+        items.insert(ts.name, write_requests);
+    }
+
+    match input_file {
+        None => (),
+        Some(file_path) => {
+            let content = fs::read_to_string(file_path)?;
+            debug!("string content: {}", content);
+            let items_from_json = build_batch_request_items_from_json(content)?;
+            debug!("built items for batch from json: {:?}", items_from_json);
+
+            // merge file items passed by `--input` option.
+            for (key, mut vec) in items_from_json {
+                items
+                    .entry(key)
+                    .and_modify(|e| e.append(&mut vec))
+                    .or_insert(vec);
+            }
+        }
+    }
+
     debug!("built items for batch: {:?}", items);
     batch_write_item_api(cx, items).await?;
     Ok(())
@@ -500,4 +579,25 @@ fn json_binary_val_to_bytes(v: &JsonValue) -> Bytes {
             .decode(v.as_str().expect("binary inputs should be string value"))
             .expect("binary inputs should be base64 with padding encoded"),
     )
+}
+
+// Check if the item has a partition key and sort key.
+fn validate_item_has_keys(attrs: &HashMap<String, AttributeValue>, ts: &app::TableSchema) {
+    if !attrs.contains_key(&ts.pk.name) {
+        error!(
+            "ERROR: You must provide the partition key attribute {:?}",
+            ts.pk.name
+        );
+        std::process::exit(1);
+    }
+
+    if let Some(sk) = &ts.sk {
+        if !attrs.contains_key(&sk.name) {
+            error!(
+                "ERROR: You must provide the sort key attribute {:?}",
+                sk.name
+            );
+            std::process::exit(1);
+        }
+    }
 }
