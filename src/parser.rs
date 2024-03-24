@@ -201,6 +201,18 @@ pub enum ParseError {
     InvalidEscapeByte(EscapeByteError),
 }
 
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            ParseError::ParsingError(ref e) => write!(f, "{}", e),
+            ParseError::UnexpectedEndOfSequence(ref e) => write!(f, "{}", e),
+            ParseError::InvalidUnicodeChar(ref e) => write!(f, "{}", e),
+            ParseError::InvalidEscapeChar(ref e) => write!(f, "{}", e),
+            ParseError::InvalidEscapeByte(ref e) => write!(f, "{}", e),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum AttrVal {
     N(String),
@@ -845,7 +857,7 @@ impl DyneinParser {
         match result {
             Ok(mut pair) => {
                 let item = parse_literal(pair.next().unwrap())?.convert_attribute_value();
-
+                // content must be map literal
                 let mut image = match initial_item {
                     Some(init_item) => init_item,
                     None => HashMap::new(),

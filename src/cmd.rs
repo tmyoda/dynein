@@ -265,15 +265,15 @@ pub enum Sub {
     /// https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
     #[structopt(aliases = &["batch-write-item", "batch-write", "bw"])]
     Bwrite {
-        /// The items to put in Dynein format.
-        /// Each item requires at least a partition key (and a sort key).
+        /// The item to put in Dynein format.
+        /// Each item requires at least a primary key.
         /// Multiple items can be specified by repeating the option.
         /// e.g. `--put '{Dynein format}' --put '{Dynein format}' --del '{Dynein format}'`
         #[structopt(long = "put", multiple = true)]
         puts: Option<Vec<String>>,
 
-        /// The items to delete in Dynein format.
-        /// Each item requires at least a partition key (and a sort key).
+        /// The item to delete in Dynein format.
+        /// Each item requires at least a primary key.
         /// Multiple items can be specified by repeating the option.
         /// e.g. `--put '{Dynein format}' --put '{Dynein format}' --del '{Dynein format}'`
         #[structopt(long = "del", multiple = true)]
