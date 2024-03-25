@@ -36,14 +36,14 @@ async fn test_batch_write_json_put() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let mut c = tm.command()?;
-    c.args(&[
+    let out = c.args(&[
         "--region",
         "local",
         "bwrite",
         "--input",
         &batch_input_file_path,
-    ])
-    .output()?;
+    ]);
+    println!("out={:?}", out.output());
 
     let mut c = tm.command()?;
     let scan_cmd = c.args(&[
