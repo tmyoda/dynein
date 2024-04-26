@@ -81,4 +81,4 @@ jobs:
     - name: Install cargo audit
       run: cargo install cargo-audit
     - name: Run audit command
-      run: cargo audit
+      run: cargo audit --quiet -D warnings -D unmaintained -D unsound -D yanked
