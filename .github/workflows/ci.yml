@@ -85,6 +85,7 @@ jobs:
     - name: Run audit command
       run: cargo audit ${{ env.CARGO_AUDIT_BASE_FLAGS }}
   credentials-scan:
+    name: Credentials scan
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
