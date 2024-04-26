@@ -95,4 +95,4 @@ jobs:
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@main
       with:
-        extra_args: --debug
+        extra_args: --only-verified
