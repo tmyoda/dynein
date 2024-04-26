@@ -84,3 +84,12 @@ jobs:
       run: cargo install cargo-audit
     - name: Run audit command
       run: cargo audit ${{ env.CARGO_AUDIT_BASE_FLAGS }}
+  credentials-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Secret Scanning
+      uses: trufflesecurity/trufflehog@main
+      with:
+        extra_args: --only-verified
