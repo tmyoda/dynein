@@ -73,6 +73,8 @@ jobs:
   audit-latest:
     name: Audit latest dependencies
     runs-on: ubuntu-latest
+    env:
+      CARGO_AUDIT_BASE_FLAGS: --quiet -D warnings -D unmaintained -D unsound -D yanked
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -81,4 +83,4 @@ jobs:
     - name: Install cargo audit
       run: cargo install cargo-audit
     - name: Run audit command
-      run: cargo audit
+      run: cargo audit ${{ env.CARGO_AUDIT_BASE_FLAGS }}
