@@ -97,6 +97,8 @@ jobs:
         # Checkout pull request HEAD commit instead of merge commit
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: ${{ env.fetch_depth }}
+    - name: debugging
+      run: git log --oneline | cat
     - name: Secret Scanning
       # v3.74.0
       uses: trufflesecurity/trufflehog@ea4d9d2d32f45e77893ecb6338d7c6bd7cddb3ec
