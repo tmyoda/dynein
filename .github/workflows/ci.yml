@@ -90,13 +90,15 @@ jobs:
     steps:
     - name: Get the number of commits
       # Adding +1 because the latest commit is a merge commit.
-      run: echo "fetch_depth=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
+      run: |
+        echo "fetch_depth=$(( ${{ github.event.pull_request.commits }} + 2 ))" >> $GITHUB_ENV
+        echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         # Checkout pull request HEAD commit instead of merge commit
-        ref: ${{ github.event.pull_request.head.sha }}
-        fetch-depth: ${{ env.fetch_depth }}
+        ref: ${{ env.branch }}
+        fetch-depth: ${{ env.depth }}
     - name: debugging
       run: git log --oneline -n 100 | cat && echo ${{ github.event.pull_request.commits }} && git rev-list --count HEAD
     - name: Secret Scanning
