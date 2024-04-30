@@ -94,6 +94,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
+        # Checkout pull request HEAD commit instead of merge commit
+        ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: ${{ github.event.pull_request.commits }}
     - name: debugging
       run: git log --oneline -n 100 | cat && echo ${{ github.event.pull_request.commits }} && git rev-list --count HEAD
