@@ -96,11 +96,11 @@ jobs:
       with:
         # Checkout pull request HEAD commit instead of merge commit
         ref: ${{ github.event.pull_request.head.sha }}
-        fetch-depth: ${{ github.event.pull_request.commits }}
+        fetch-depth: ${{ env.fetch_depth }}
     - name: debugging
       run: git log --oneline -n 100 | cat && echo ${{ github.event.pull_request.commits }} && git rev-list --count HEAD
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@ea4d9d2d32f45e77893ecb6338d7c6bd7cddb3ec
       with:
-        extra_args: --no-verification
+        extra_args: --no-verification --debug
         version: 3.74.0@sha256:7557cb2527b0c80dd5d7350b6bcd1f3a7c4baeeb158e67d6b0ee5d2b0942f151
