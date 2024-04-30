@@ -94,9 +94,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: ${{ env.fetch_depth }}
+        fetch-depth: ${{ github.event.pull_request.commits }}
     - name: debugging
-      run: git log --oneline -n 100 | cat && echo ${{ github.event.pull_request.commits }}
+      run: git log --oneline -n 100 | cat && echo ${{ github.event.pull_request.commits }} && git rev-list --count HEAD
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@ea4d9d2d32f45e77893ecb6338d7c6bd7cddb3ec
       with:
