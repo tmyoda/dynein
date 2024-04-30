@@ -91,8 +91,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0
+        fetch-depth: ${{ github.event.pull_request.commits }}
+    - name: debugging
+      run: git log --oneline
     - name: Secret Scanning
-      uses: trufflesecurity/trufflehog@main
+      uses: trufflesecurity/trufflehog@ea4d9d2d32f45e77893ecb6338d7c6bd7cddb3ec
       with:
-        extra_args: --only-verified
+        extra_args: --no-verification
