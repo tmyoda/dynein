@@ -88,13 +88,17 @@ jobs:
     name: Credentials scan
     runs-on: ubuntu-latest
     steps:
+    - name: Get the number of commits
+      # Adding +1 because the latest commit is a merge commit.
+      run: echo "fetch_depth=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> $GITHUB_ENV
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: ${{ github.event.pull_request.commits }}
+        fetch-depth: ${{ env.fetch_depth }}
     - name: debugging
-      run: git log --oneline
+      run: git log --oneline -n 100 | cat && echo ${{ github.event.pull_request.commits }}
     - name: Secret Scanning
       uses: trufflesecurity/trufflehog@ea4d9d2d32f45e77893ecb6338d7c6bd7cddb3ec
       with:
         extra_args: --no-verification
+        version: 3.74.0@sha256:7557cb2527b0c80dd5d7350b6bcd1f3a7c4baeeb158e67d6b0ee5d2b0942f151
